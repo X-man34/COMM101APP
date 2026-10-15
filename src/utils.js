@@ -27,3 +27,9 @@ export const initials = (name) =>
         .toUpperCase();
 
 export const courseCode = (course) => course.split(' - ')[0];
+
+// University email, e.g. "Maya Chen" -> mayachen@u.boisestate.edu
+export const makeEmail = (name) =>
+    `${(name || '').toLowerCase().replace(/[^a-z]/g, '') || 'student'}@u.boisestate.edu`;
+
+export const emailFor = (user) => user?.email || makeEmail(user?.name);

@@ -1,3 +1,5 @@
+import { makeEmail } from '../utils';
+
 export const MAJORS = [
     'Computer Science',
     'Biology',
@@ -30,6 +32,7 @@ export const COURSES = {
         'ME 210 - Statics',
         'ME 320 - Thermodynamics',
         'ME 350 - Fluid Mechanics',
+        'ME 401 - Thermodynamic Systems and Applications',
     ],
     Psychology: [
         'PSY 101 - Intro to Psychology',
@@ -59,10 +62,11 @@ export function seedState() {
         // Mechanical Engineering
         { id: 'u11', name: 'Zoe Nguyen', major: 'Mechanical Engineering', year: 2, role: 'student', bio: 'Formula SAE team member.', courses: ['ME 210 - Statics', 'ME 320 - Thermodynamics'] },
         { id: 'u12', name: 'Daniel Okafor', major: 'Mechanical Engineering', year: 4, role: 'mentor', bio: 'Senior mentor. Thermo and fluids are my strong suits.', courses: ['ME 350 - Fluid Mechanics'] },
+        { id: 'u15', name: 'Caleb H.', major: 'Mechanical Engineering', year: 4, role: 'student', bio: 'Senior in ME. Shared my ME 401 final report as an example for anyone taking the class.', courses: ['ME 401 - Thermodynamic Systems and Applications'] },
         // Psychology
         { id: 'u13', name: 'Hannah Schultz', major: 'Psychology', year: 1, role: 'student', bio: 'Freshman, curious about cognitive science.', courses: ['PSY 101 - Intro to Psychology'] },
         { id: 'u14', name: 'Omar Haddad', major: 'Psychology', year: 3, role: 'mentor', bio: 'Junior peer mentor. Research methods tutor.', courses: ['PSY 305 - Cognitive Psychology'] },
-    ];
+    ].map((u) => ({ ...u, email: makeEmail(u.name) }));
 
     const groups = [
         {
@@ -71,6 +75,7 @@ export function seedState() {
             course: 'CS 101 - Intro to Programming',
             major: 'Computer Science',
             description: 'Weekly problem-set sessions for Intro to Programming. Beginners welcome!',
+            isPrivate: false,
             ownerId: 'u1',
             memberIds: ['u1', 'u5', 'u4'],
             invitedIds: [],
@@ -87,6 +92,7 @@ export function seedState() {
             course: 'CS 201 - Data Structures',
             major: 'Computer Science',
             description: 'Trees, graphs, and tears. Prepping for the midterm.',
+            isPrivate: true,
             ownerId: 'u2',
             memberIds: ['u2', 'u3'],
             invitedIds: ['u1'],
@@ -102,6 +108,7 @@ export function seedState() {
             course: 'BIO 220 - Genetics',
             major: 'Biology',
             description: 'Punnett squares, pedigrees, and more.',
+            isPrivate: false,
             ownerId: 'u7',
             memberIds: ['u7', 'u6', 'u8'],
             invitedIds: [],
@@ -116,6 +123,7 @@ export function seedState() {
             course: 'ME 320 - Thermodynamics',
             major: 'Mechanical Engineering',
             description: 'Entropy never decreases, but our grades can go up.',
+            isPrivate: false,
             ownerId: 'u12',
             memberIds: ['u12', 'u11'],
             invitedIds: [],
@@ -187,6 +195,55 @@ export function seedState() {
 
     const materials = [
         {
+            id: 'mat6',
+            type: 'notes',
+            title: 'ME 401 Project 2 Final Report (Example): Anaerobic Digestion and Steam Rankine Cogeneration',
+            course: 'ME 401 - Thermodynamic Systems and Applications',
+            major: 'Mechanical Engineering',
+            authorId: 'u15',
+            ts: hoursAgo(6),
+            content: {
+                attachment: {
+                    name: 'FinalreportV2.pdf',
+                    path: 'files/FinalreportV2.pdf', // lives in public/files/
+                    meta: 'PDF · 16 pages',
+                },
+                body: `EXAMPLE FINAL REPORT: ME 401 PROJECT 2
+Energy Recovery from Wastewater Sludge via Anaerobic Digestion and Steam Rankine Cogeneration
+The full report is attached as a PDF below. Use it as a reference for structure and level of detail.
+
+WHAT THE PROJECT IS
+- Coupled steady-state model of an anaerobic digester (CSTR, mesophilic, 35 °C) and a steam Rankine cogeneration plant
+- Biogas from the digester fires the boiler; steam extracted from the turbine heats the digester
+- Written in Python with CoolProp for properties and SciPy for optimization
+
+BASELINE CASE (3,000 m³ reactor, population 100,000)
+- HRT 20 days, methane 1,200 m³/day, biogas energy 497 kW
+- Digester heat demand 166 kW (about 148 kW of it is heating sludge from 15 °C to 35 °C)
+- Cycle: boiler 6 MPa / 450 °C, extraction at 500 kPa, condenser at 10 kPa
+- Extraction fraction y = 0.522
+- Net electrical output 104 kW, process heat 166 kW
+- Electrical efficiency 20.9%, CHP efficiency 54.2%
+- Offsets 41.6% of the plant's 250 kW grid demand
+
+KEY RESULTS
+- Electrical self-sufficiency needs a reactor of about 7,157 m³ (roughly 2.4x baseline)
+- Optimized cycle (12 MPa, 550 °C, 200 kPa extraction) gives 125.1 kW, about 20% more power
+- Versus grid-only: about $91,000 per year saved, 365 tonnes of CO2 per year avoided, 2.9 year simple payback
+
+HOW THE REPORT IS ORGANIZED
+1. Introduction and objectives
+2. Methodology: digester model, Rankine model (8 state points), optimization setup, grid assumptions
+3. Results: baseline tables, parametric sweeps, energy balance, grid comparison, optimization, breakeven
+4. Discussion: trade-offs, feasibility, economics, limitations, comparison to literature
+5. Conclusion and recommendation
+
+IF YOU ARE WRITING YOUR OWN
+- A state-point table makes the cycle easy to check
+- List every assumption with its number (efficiencies, costs, carbon intensity)`,
+            },
+        },
+        {
             id: 'mat1',
             type: 'quiz',
             title: 'CS 101 Loops & Conditionals Check',
@@ -251,7 +308,7 @@ SCHEDULING QUICK REF
 - FCFS: simple, convoy effect
 - SJF: optimal avg wait, needs burst prediction
 - RR: fair, quantum size matters
-- Priority: starvation → fix with aging`,
+- Priority: starvation, fix with aging`,
             },
         },
         {

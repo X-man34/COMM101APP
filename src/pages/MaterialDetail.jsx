@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useStore } from '../store/store';
-import { Avatar, Badge } from '../components/ui';
-import { timeAgo, courseCode, yearLabel } from '../utils';
+import { Avatar, BackLink, Badge, Icon } from '../components/ui';
+import { timeAgo, yearLabel } from '../utils';
 
 function QuizPlayer({ questions }) {
     const [answers, setAnswers] = useState({});
@@ -59,9 +59,9 @@ function FlashcardPlayer({ cards }) {
                 </div>
             </div>
             <div className="row gap center">
-                <button className="btn btn-ghost" onClick={() => go(-1)}>← Prev</button>
+                <button className="btn btn-ghost" onClick={() => go(-1)}>Previous</button>
                 <span className="muted">{i + 1} / {cards.length}</span>
-                <button className="btn btn-ghost" onClick={() => go(1)}>Next →</button>
+                <button className="btn btn-ghost" onClick={() => go(1)}>Next</button>
             </div>
             <details style={{ width: '100%' }}>
                 <summary className="muted">Show all cards as a list</summary>
@@ -74,24 +74,51 @@ function FlashcardPlayer({ cards }) {
     );
 }
 
+function Attachment({ file }) {
+    const url = `${import.meta.env.BASE_URL}${file.path}`;
+    return (
+        <div className="card">
+            <div className="row between wrap gap">
+                <div className="row gap">
+                    <Icon name="file" size={26} />
+                    <div>
+                        <b>{file.name}</b>
+                        <div className="muted small">{file.meta}</div>
+                    </div>
+                </div>
+                <div className="row gap">
+                    <a className="btn btn-primary btn-sm" href={url} target="_blank" rel="noreferrer">Open PDF</a>
+                    <a className="btn btn-ghost btn-sm" href={url} download={file.name}>Download</a>
+                </div>
+            </div>
+            <object className="pdf-preview" data={url} type="application/pdf" aria-label={`Preview of ${file.name}`}>
+                <p className="muted small">An inline preview isn't available in this browser. Use "Open PDF" instead.</p>
+            </object>
+        </div>
+    );
+}
+
 export default function MaterialDetail() {
     const { id } = useParams();
     const { state, userById } = useStore();
     const m = state.materials.find((x) => x.id === id);
-    if (!m) return <p>Material not found. <Link to="/materials">Back</Link></p>;
+    if (!m) return <p>Material not found. <Link to="/materials">Back to materials</Link></p>;
     const author = userById(m.authorId);
     const tone = m.type === 'quiz' ? 'blue' : m.type === 'flashcards' ? 'purple' : 'green';
 
     return (
         <>
-            <Link to="/materials" className="link">← Back to materials</Link>
+            <BackLink to="/materials">Back to materials</BackLink>
             <div className="page-header">
                 <div>
                     <h1>{m.title} <Badge tone={tone}>{m.type}</Badge></h1>
                     <p className="muted">{m.course} · {m.major}</p>
                     <div className="row gap small" style={{ marginTop: 6 }}>
                         <Avatar user={author} size={26} />
-                        <span>by <b>{author?.name}</b> · {yearLabel(author?.year)} {author?.role === 'mentor' && <Badge tone="gold">Mentor</Badge>} · {timeAgo(m.ts)}</span>
+                        <span>
+                            by <Link to={`/people/${author?.id}`} className="chip-name bold">{author?.name}</Link> · {yearLabel(author?.year)}{' '}
+                            {author?.role === 'mentor' && <Badge tone="gold">Mentor</Badge>} · {timeAgo(m.ts)}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -99,9 +126,12 @@ export default function MaterialDetail() {
             {m.type === 'quiz' && <QuizPlayer questions={m.content.questions} />}
             {m.type === 'flashcards' && <FlashcardPlayer cards={m.content.cards} />}
             {m.type === 'notes' && (
-                <div className="card">
-                    <pre className="notes">{m.content.body}</pre>
-                </div>
+                <>
+                    <div className="card">
+                        <pre className="notes">{m.content.body}</pre>
+                    </div>
+                    {m.content.attachment && <Attachment file={m.content.attachment} />}
+                </>
             )}
         </>
     );

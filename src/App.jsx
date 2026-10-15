@@ -11,6 +11,7 @@ import Materials from './pages/Materials';
 import MaterialNew from './pages/MaterialNew';
 import MaterialDetail from './pages/MaterialDetail';
 import People from './pages/People';
+import PersonDetail from './pages/PersonDetail';
 
 function RequireAuth({ children }) {
     const { currentUser } = useStore();
@@ -40,6 +41,7 @@ export default function App() {
                 <Route path="materials/new" element={<MaterialNew />} />
                 <Route path="materials/:id" element={<MaterialDetail />} />
                 <Route path="people" element={<People />} />
+                <Route path="people/:id" element={<PersonDetail />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

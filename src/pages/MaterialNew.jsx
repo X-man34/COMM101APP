@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/store';
 import { COURSES } from '../data/seed';
-import { PageHeader } from '../components/ui';
+import { BackLink, NotSupportedButton, PageHeader } from '../components/ui';
 
 const blankQuestion = () => ({ q: '', options: ['', '', '', ''], answer: 0 });
 const blankCard = () => ({ front: '', back: '' });
@@ -41,14 +41,14 @@ export default function MaterialNew() {
 
     return (
         <>
-            <Link to="/materials" className="link">← Back to materials</Link>
+            <BackLink to="/materials">Back to materials</BackLink>
             <PageHeader title="Create study material" subtitle={`Shared with students in ${currentUser.major} who take the same class.`} />
 
             <form className="card form" onSubmit={submit}>
                 <div className="segmented">
-                    <button type="button" className={type === 'quiz' ? 'active' : ''} onClick={() => setType('quiz')}>❓ Quiz</button>
-                    <button type="button" className={type === 'flashcards' ? 'active' : ''} onClick={() => setType('flashcards')}>🃏 Flashcards</button>
-                    <button type="button" className={type === 'notes' ? 'active' : ''} onClick={() => setType('notes')}>📝 Notes</button>
+                    <button type="button" className={type === 'quiz' ? 'active' : ''} onClick={() => setType('quiz')}>Quiz</button>
+                    <button type="button" className={type === 'flashcards' ? 'active' : ''} onClick={() => setType('flashcards')}>Flashcards</button>
+                    <button type="button" className={type === 'notes' ? 'active' : ''} onClick={() => setType('notes')}>Notes</button>
                 </div>
 
                 <label>
@@ -96,7 +96,7 @@ export default function MaterialNew() {
                                 <input value={c.front} onChange={(e) => updateCard(i, { front: e.target.value })} placeholder="Front (term / question)" />
                                 <input value={c.back} onChange={(e) => updateCard(i, { back: e.target.value })} placeholder="Back (definition / answer)" />
                                 {cards.length > 1 && (
-                                    <button type="button" className="btn btn-ghost btn-sm danger" onClick={() => setCards(cards.filter((_, j) => j !== i))}>✕</button>
+                                    <button type="button" className="btn btn-ghost btn-sm danger" onClick={() => setCards(cards.filter((_, j) => j !== i))}>Remove</button>
                                 )}
                             </div>
                         ))}
@@ -105,10 +105,16 @@ export default function MaterialNew() {
                 )}
 
                 {type === 'notes' && (
-                    <label>
-                        Notes
-                        <textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write or paste your notes here. Line breaks are preserved." />
-                    </label>
+                    <>
+                        <label>
+                            Notes
+                            <textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write or paste your notes here. Line breaks are preserved." />
+                        </label>
+                        <div className="field">
+                            <span className="field-label">Attachment</span>
+                            <NotSupportedButton icon="upload" label="Upload a file" showLabel />
+                        </div>
+                    </>
                 )}
 
                 <div className="row gap">

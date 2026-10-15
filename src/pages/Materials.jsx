@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/store';
 import { COURSES } from '../data/seed';
-import { Badge, EmptyState, PageHeader, ScopeToggle, useScope } from '../components/ui';
+import { Badge, EmptyState, Icon, PageHeader, ScopeToggle, useScope } from '../components/ui';
 import { timeAgo, courseCode } from '../utils';
 
 const TYPE_META = {
-    quiz: { icon: '❓', tone: 'blue', label: 'Quiz' },
-    flashcards: { icon: '🃏', tone: 'purple', label: 'Flashcards' },
-    notes: { icon: '📝', tone: 'green', label: 'Notes' },
+    quiz: { icon: 'quiz', tone: 'blue', label: 'Quiz' },
+    flashcards: { icon: 'cards', tone: 'purple', label: 'Flashcards' },
+    notes: { icon: 'file', tone: 'green', label: 'Notes' },
 };
 
 export default function Materials() {
@@ -28,7 +28,8 @@ export default function Materials() {
     const summary = (m) => {
         if (m.type === 'quiz') return `${m.content.questions.length} questions`;
         if (m.type === 'flashcards') return `${m.content.cards.length} cards`;
-        return `${m.content.body.split(/\s+/).length} words`;
+        const words = `${m.content.body.split(/\s+/).filter(Boolean).length} words`;
+        return m.content.attachment ? `${words} · PDF attached` : words;
     };
 
     return (
@@ -44,7 +45,7 @@ export default function Materials() {
                 <div className="segmented">
                     <button className={type === '' ? 'active' : ''} onClick={() => setType('')}>All types</button>
                     {Object.entries(TYPE_META).map(([k, v]) => (
-                        <button key={k} className={type === k ? 'active' : ''} onClick={() => setType(k)}>{v.icon} {v.label}</button>
+                        <button key={k} className={type === k ? 'active' : ''} onClick={() => setType(k)}>{v.label}</button>
                     ))}
                 </div>
                 <select value={course} onChange={(e) => setCourse(e.target.value)}>
@@ -65,7 +66,7 @@ export default function Materials() {
                         return (
                             <Link key={m.id} to={`/materials/${m.id}`} className="card material-card hover">
                                 <div className="row between">
-                                    <span className="material-icon">{meta.icon}</span>
+                                    <span className="material-icon"><Icon name={meta.icon} size={22} /></span>
                                     <Badge tone={meta.tone}>{meta.label}</Badge>
                                 </div>
                                 <b className="big-link">{m.title}</b>

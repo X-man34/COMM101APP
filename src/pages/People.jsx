@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/store';
-import { Avatar, Badge, EmptyState, PageHeader, ScopeToggle, useScope } from '../components/ui';
-import { yearLabel, courseCode, isUpperclassman } from '../utils';
+import { Avatar, EmptyState, PageHeader, ScopeToggle, useScope } from '../components/ui';
+import { isUpperclassman } from '../utils';
 
 export default function People() {
     const { state, currentUser, isConnected, toggleConnection, myConnections, userById } = useStore();
@@ -20,13 +20,12 @@ export default function People() {
         return true;
     });
 
-    const sharedGroups = (u) => state.groups.filter((g) => g.memberIds.includes(u.id) && g.memberIds.includes(currentUser.id));
     const connections = myConnections().map(userById).filter(Boolean);
 
     return (
         <>
             <PageHeader
-                title={`People in ${scope === 'major' ? currentUser.major : 'the University'}`}
+                title="People"
                 subtitle="Find classmates, upperclassmen, and paid mentors to connect with."
             />
 
@@ -45,7 +44,9 @@ export default function People() {
                 <div className="card subtle">
                     <b>Your connections ({connections.length}):</b>{' '}
                     <span className="avatars" style={{ marginLeft: 8 }}>
-                        {connections.map((u) => <Avatar key={u.id} user={u} size={28} />)}
+                        {connections.map((u) => (
+                            <Link key={u.id} to={`/people/${u.id}`}><Avatar user={u} size={28} /></Link>
+                        ))}
                     </span>
                 </div>
             )}
@@ -56,21 +57,20 @@ export default function People() {
                 <div className="grid-3">
                     {people.map((u) => {
                         const connected = isConnected(currentUser.id, u.id);
-                        const shared = sharedGroups(u);
                         return (
                             <div key={u.id} className="card person-card">
-                                <div className="row gap">
+                                <Link to={`/people/${u.id}`} className="row gap person-link">
                                     <Avatar user={u} size={48} />
                                     <div>
                                         <b>{u.name}</b>
                                     </div>
-                                </div>
+                                </Link>
                                 <p className="muted small">{u.bio || 'No bio yet.'}</p>
                                 <div className="row gap" style={{ marginTop: 'auto' }}>
                                     <button className={`btn btn-sm ${connected ? 'btn-ghost' : 'btn-primary'}`} onClick={() => toggleConnection(u.id)}>
-                                        {connected ? '✓ Connected' : '+ Connect'}
+                                        {connected ? 'Connected' : '+ Connect'}
                                     </button>
-                                    <Link to="/groups" className="btn btn-ghost btn-sm">Invite to a group</Link>
+                                    <Link to={`/people/${u.id}`} className="btn btn-ghost btn-sm">View profile</Link>
                                 </div>
                             </div>
                         );

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/store';
 import { MAJORS } from '../data/seed';
-import { Avatar, Badge } from '../components/ui';
+import { Avatar, Badge, BrandMark } from '../components/ui';
 import { yearLabel } from '../utils';
 
 export default function Login() {
@@ -28,11 +28,11 @@ export default function Login() {
     return (
         <div className="login-page">
             <div className="login-card">
-                <div className="brand big">
-                    <span className="brand-mark">CC</span>
+                <div className="brand">
+                    <BrandMark size={48} />
                     <div>
-                        <div className="brand-name">CampusConnect</div>
-                        <div className="muted">Study groups · Resources · Mentorship</div>
+                        <div className="brand-name big">Bronco Bridge</div>
+                        <div className="muted">Boise State University · Study groups · Resources · Mentorship</div>
                     </div>
                 </div>
 
@@ -97,7 +97,7 @@ export default function Login() {
                             Short bio
                             <textarea rows={2} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="What are you studying / interested in?" />
                         </label>
-                        <button className="btn btn-primary" type="submit">Create account & sign in</button>
+                        <button className="btn btn-primary" type="submit">Create account and sign in</button>
                         <p className="muted small">Your account is stored only in this browser.</p>
                     </form>
                 )}

@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import { seedState } from '../data/seed';
-import { uid } from '../utils';
+import { uid, makeEmail } from '../utils';
 
-const STORAGE_KEY = 'campusconnect-demo-v1';
+const STORAGE_KEY = 'broncobridge-demo-v1';
+const OLD_KEYS = ['campusconnect-demo-v1'];
 
 function load() {
     try {
+        OLD_KEYS.forEach((k) => localStorage.removeItem(k));
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) return JSON.parse(raw);
     } catch (e) {
@@ -72,21 +74,22 @@ export function StoreProvider({ children }) {
             register: ({ name, major, year, role, bio }) =>
                 dispatch({
                     type: 'REGISTER',
-                    user: { id: uid(), name, major, year, role, bio: bio || '', courses: [] },
+                    user: { id: uid(), name, major, year, role, bio: bio || '', courses: [], email: makeEmail(name) },
                 }),
             resetDemo: () => dispatch({ type: 'RESET' }),
 
             // ---- Study groups ----
-            createGroup: ({ name, course, description, major }) => {
+            createGroup: ({ name, course, description, major, isPrivate = false, inviteIds = [] }) => {
                 const group = {
                     id: uid(),
                     name,
                     course,
                     major,
                     description,
+                    isPrivate,
                     ownerId: me(),
                     memberIds: [me()],
-                    invitedIds: [],
+                    invitedIds: inviteIds.filter((id) => id !== me()),
                     createdAt: Date.now(),
                     messages: [],
                 };
@@ -116,8 +119,16 @@ export function StoreProvider({ children }) {
                 dispatch({
                     type: 'UPDATE_GROUP',
                     id: groupId,
-                    updater: (g) =>
-                        g.memberIds.includes(me()) ? g : { ...g, memberIds: [...g.memberIds, me()] },
+                    updater: (g) => {
+                        if (g.memberIds.includes(me())) return g;
+                        // Private groups are invite-only.
+                        if (g.isPrivate && !g.invitedIds.includes(me())) return g;
+                        return {
+                            ...g,
+                            memberIds: [...g.memberIds, me()],
+                            invitedIds: g.invitedIds.filter((id) => id !== me()),
+                        };
+                    },
                 }),
             leaveGroup: (groupId) =>
                 dispatch({
