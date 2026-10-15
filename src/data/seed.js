@@ -351,5 +351,11 @@ SCHEDULING QUICK REF
         ['u6', 'u7'],
     ];
 
-    return { currentUserId: null, users, groups, posts, materials, connections };
+    // Pending connection requests (the recipient has to accept).
+    const connectionRequests = [
+        { from: 'u2', to: 'u1', ts: hoursAgo(5) },   // Jordan -> Maya
+        { from: 'u11', to: 'u15', ts: hoursAgo(3) }, // Zoe -> Caleb
+    ];
+
+    return { currentUserId: null, users, groups, posts, materials, connections, connectionRequests };
 }

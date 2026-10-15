@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/store';
 import { Badge, PageHeader, UserChip } from '../components/ui';
+import ConnectionRequests from '../components/ConnectionRequests';
 import { timeAgo, courseCode } from '../utils';
 
 export default function Dashboard() {
@@ -27,6 +28,8 @@ export default function Dashboard() {
                 <Link to="/materials" className="stat-chip"><b>{allMajorMaterials.length}</b> shared materials</Link>
                 <Link to="/people" className="stat-chip"><b>{connections.length}</b> connections</Link>
             </div>
+
+            <ConnectionRequests />
 
             {invites.length > 0 && (
                 <div className="card highlight">
@@ -67,10 +70,13 @@ export default function Dashboard() {
                 <div className="card">
                     <div className="card-head">
                         <h3>My study groups</h3>
-                        <Link to="/groups" className="link">View all</Link>
+                        <Link to="/groups" className="link">{me.role === 'mentor' ? 'All groups' : 'View all'}</Link>
                     </div>
                     {myGroups.length === 0 && (
-                        <p className="muted">You haven't joined a group yet. <Link to="/groups">Find or create one</Link></p>
+                        <p className="muted">
+                            You haven't joined a group yet.{' '}
+                            <Link to="/groups">{me.role === 'mentor' ? 'Browse all study groups' : 'Find or create one'}</Link>
+                        </p>
                     )}
                     {myGroups.map((g) => (
                         <Link to={`/groups/${g.id}`} key={g.id} className="list-row hover">

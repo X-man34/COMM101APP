@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useStore } from '../store/store';
 import { Avatar, BackLink, Badge, Icon } from '../components/ui';
+import ConnectButton from '../components/ConnectButton';
 import { yearLabel, courseCode, isUpperclassman, emailFor, timeAgo } from '../utils';
 
 export default function PersonDetail() {
     const { id } = useParams();
-    const { state, currentUser, userById, isConnected, toggleConnection, inviteToGroup } = useStore();
+    const { state, currentUser, userById, inviteToGroup } = useStore();
     const person = userById(id);
     const [groupId, setGroupId] = useState('');
     const [notice, setNotice] = useState('');
@@ -14,12 +15,12 @@ export default function PersonDetail() {
     if (!person) return <p>Person not found. <Link to="/people">Back to People</Link></p>;
 
     const isMe = person.id === currentUser.id;
-    const connected = isConnected(currentUser.id, person.id);
     const email = emailFor(person);
+    const iAmMentor = currentUser.role === 'mentor';
 
-    // Private groups only show up here if you are in them too.
+    // Private groups only show up here if you are in them too (mentors can see all groups).
     const theirGroups = state.groups.filter(
-        (g) => g.memberIds.includes(person.id) && (!g.isPrivate || g.memberIds.includes(currentUser.id))
+        (g) => g.memberIds.includes(person.id) && (!g.isPrivate || g.memberIds.includes(currentUser.id) || iAmMentor)
     );
     const invitableGroups = state.groups.filter(
         (g) =>
@@ -56,14 +57,12 @@ export default function PersonDetail() {
                         <p className="muted">{person.major} · {yearLabel(person.year)}</p>
                         <div className="row gap wrap" style={{ marginTop: 6 }}>
                             {person.role === 'mentor' && <Badge tone="gold">University-paid Mentor</Badge>}
-                            {!isMe && connected && <Badge tone="green">Connected</Badge>}
+                            <Badge>{isUpperclassman(person) ? 'Upperclassman' : 'Underclassman'}</Badge>
                         </div>
                     </div>
                     {!isMe && (
                         <div className="row gap wrap">
-                            <button className={`btn ${connected ? 'btn-ghost' : 'btn-primary'}`} onClick={() => toggleConnection(person.id)}>
-                                {connected ? 'Remove connection' : '+ Connect'}
-                            </button>
+                            <ConnectButton user={person} small={false} allowRemove />
                             <a className="btn btn-ghost" href={`mailto:${email}`}>
                                 <Icon name="mail" size={16} /> Email
                             </a>

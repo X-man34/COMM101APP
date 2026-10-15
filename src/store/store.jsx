@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useReducer } from 'react
 import { seedState } from '../data/seed';
 import { uid, makeEmail } from '../utils';
 
-const STORAGE_KEY = 'broncobridge-demo-v1';
-const OLD_KEYS = ['campusconnect-demo-v1'];
+const STORAGE_KEY = 'broncobridge-demo-v2';
+const OLD_KEYS = ['campusconnect-demo-v1', 'broncobridge-demo-v1'];
 
 function load() {
     try {
@@ -19,6 +19,9 @@ function load() {
 function updateById(list, id, updater) {
     return list.map((item) => (item.id === id ? updater(item) : item));
 }
+
+const samePair = ([x, y], a, b) => (x === a && y === b) || (x === b && y === a);
+const isRequest = (r, from, to) => r.from === from && r.to === to;
 
 function reducer(state, action) {
     switch (action.type) {
@@ -38,18 +41,44 @@ function reducer(state, action) {
             return { ...state, posts: updateById(state.posts, action.id, action.updater) };
         case 'ADD_MATERIAL':
             return { ...state, materials: [action.material, ...state.materials] };
-        case 'TOGGLE_CONNECTION': {
-            const [a, b] = action.pair;
-            const exists = state.connections.some(
-                ([x, y]) => (x === a && y === b) || (x === b && y === a)
-            );
+
+        // ---- Connections: request -> accept/decline ----
+        case 'REQUEST_CONNECTION': {
+            const { from, to, ts } = action;
+            const requests = state.connectionRequests || [];
+            if (from === to) return state;
+            if (state.connections.some((c) => samePair(c, from, to))) return state;
+            // They already asked me, so my request counts as accepting theirs.
+            if (requests.some((r) => isRequest(r, to, from))) {
+                return {
+                    ...state,
+                    connections: [...state.connections, [to, from]],
+                    connectionRequests: requests.filter((r) => !isRequest(r, to, from)),
+                };
+            }
+            if (requests.some((r) => isRequest(r, from, to))) return state;
+            return { ...state, connectionRequests: [...requests, { from, to, ts }] };
+        }
+        case 'CANCEL_REQUEST': {
+            const requests = state.connectionRequests || [];
+            return { ...state, connectionRequests: requests.filter((r) => !isRequest(r, action.from, action.to)) };
+        }
+        case 'RESPOND_REQUEST': {
+            const { from, to, accept } = action;
+            const requests = state.connectionRequests || [];
+            if (!requests.some((r) => isRequest(r, from, to))) return state;
+            const already = state.connections.some((c) => samePair(c, from, to));
             return {
                 ...state,
-                connections: exists
-                    ? state.connections.filter(([x, y]) => !((x === a && y === b) || (x === b && y === a)))
-                    : [...state.connections, [a, b]],
+                connectionRequests: requests.filter((r) => !isRequest(r, from, to)),
+                connections: accept && !already ? [...state.connections, [from, to]] : state.connections,
             };
         }
+        case 'REMOVE_CONNECTION': {
+            const [a, b] = action.pair;
+            return { ...state, connections: state.connections.filter((c) => !samePair(c, a, b)) };
+        }
+
         case 'RESET':
             return seedState();
         default:
@@ -68,6 +97,7 @@ export function StoreProvider({ children }) {
 
     const api = useMemo(() => {
         const me = () => state.currentUserId;
+        const iAmMentor = () => state.users.find((u) => u.id === state.currentUserId)?.role === 'mentor';
         return {
             login: (userId) => dispatch({ type: 'LOGIN', userId }),
             logout: () => dispatch({ type: 'LOGOUT' }),
@@ -121,8 +151,8 @@ export function StoreProvider({ children }) {
                     id: groupId,
                     updater: (g) => {
                         if (g.memberIds.includes(me())) return g;
-                        // Private groups are invite-only.
-                        if (g.isPrivate && !g.invitedIds.includes(me())) return g;
+                        // Private groups are invite-only, except for university-paid mentors.
+                        if (g.isPrivate && !g.invitedIds.includes(me()) && !iAmMentor()) return g;
                         return {
                             ...g,
                             memberIds: [...g.memberIds, me()],
@@ -170,20 +200,37 @@ export function StoreProvider({ children }) {
             },
 
             // ---- People ----
-            toggleConnection: (otherId) => dispatch({ type: 'TOGGLE_CONNECTION', pair: [me(), otherId] }),
+            requestConnection: (otherId) =>
+                dispatch({ type: 'REQUEST_CONNECTION', from: me(), to: otherId, ts: Date.now() }),
+            cancelConnectionRequest: (otherId) =>
+                dispatch({ type: 'CANCEL_REQUEST', from: me(), to: otherId }),
+            respondToConnectionRequest: (fromId, accept) =>
+                dispatch({ type: 'RESPOND_REQUEST', from: fromId, to: me(), accept }),
+            removeConnection: (otherId) =>
+                dispatch({ type: 'REMOVE_CONNECTION', pair: [me(), otherId] }),
         };
     }, [state.currentUserId]);
 
     const currentUser = state.users.find((u) => u.id === state.currentUserId) || null;
+    const requests = state.connectionRequests || [];
+    const meId = state.currentUserId;
 
     const helpers = {
         userById: (id) => state.users.find((u) => u.id === id),
-        isConnected: (a, b) =>
-            state.connections.some(([x, y]) => (x === a && y === b) || (x === b && y === a)),
+        isConnected: (a, b) => state.connections.some((c) => samePair(c, a, b)),
         myConnections: () =>
             state.connections
-                .filter(([x, y]) => x === state.currentUserId || y === state.currentUserId)
-                .map(([x, y]) => (x === state.currentUserId ? y : x)),
+                .filter(([x, y]) => x === meId || y === meId)
+                .map(([x, y]) => (x === meId ? y : x)),
+        // 'connected' | 'outgoing' (I asked) | 'incoming' (they asked) | 'none'
+        connectionStatus: (otherId) => {
+            if (state.connections.some((c) => samePair(c, meId, otherId))) return 'connected';
+            if (requests.some((r) => isRequest(r, meId, otherId))) return 'outgoing';
+            if (requests.some((r) => isRequest(r, otherId, meId))) return 'incoming';
+            return 'none';
+        },
+        incomingRequests: () => requests.filter((r) => r.to === meId),
+        outgoingRequests: () => requests.filter((r) => r.from === meId),
     };
 
     return (

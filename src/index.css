@@ -1096,6 +1096,55 @@ nav {
     color: var(--text);
 }
 
+/* ---------- Sidebar: logo as expand button, request count ---------- */
+.brand-btn {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 9px;
+}
+
+.brand-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.nav-link {
+    position: relative;
+}
+
+.nav-count {
+    margin-left: auto;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.nav-dot {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+/* ---------- Notices (mentor access) ---------- */
+.notice {
+    background: var(--accent-soft);
+    border: 1px solid #f6cdb8;
+    color: #8a2c07;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1000px) {
     .grid-3 {
@@ -1169,6 +1218,11 @@ nav {
     }
 
     .pdf-preview {
+        display: none;
+    }
+
+    /* phones: tap the logo to expand instead */
+    .expand-btn {
         display: none;
     }
 

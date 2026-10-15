@@ -27,9 +27,10 @@ function initialCollapsed() {
 }
 
 export default function Layout() {
-    const { currentUser, logout, resetDemo } = useStore();
+    const { currentUser, logout, resetDemo, incomingRequests } = useStore();
     const navigate = useNavigate();
     const [collapsed, setCollapsed] = useState(initialCollapsed);
+    const requestCount = incomingRequests().length;
 
     useEffect(() => {
         if (isNarrow()) return; // don't let a phone overwrite the desktop preference
@@ -57,17 +58,28 @@ export default function Layout() {
 
             <aside className="sidebar">
                 <div className="sidebar-top">
-                    <div className="brand">
-                        <BrandMark size={36} />
-                        {!collapsed && (
+                    {collapsed ? (
+                        // Collapsed: the logo itself is the expand button.
+                        <button
+                            className="brand brand-btn"
+                            onClick={() => setCollapsed(false)}
+                            aria-label="Expand navigation"
+                            title="Expand navigation"
+                        >
+                            <BrandMark size={36} />
+                        </button>
+                    ) : (
+                        <div className="brand">
+                            <BrandMark size={36} />
                             <div className="brand-text">
                                 <div className="brand-name">Bronco Bridge</div>
                                 <div className="muted small">Boise State University</div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
+                    {/* The expand arrow (.expand-btn) is hidden on phones via CSS; the collapse arrow always shows. */}
                     <button
-                        className="collapse-btn"
+                        className={`collapse-btn ${collapsed ? 'expand-btn' : ''}`}
                         onClick={() => setCollapsed((c) => !c)}
                         aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
                         title={collapsed ? 'Expand' : 'Collapse'}
@@ -77,20 +89,24 @@ export default function Layout() {
                 </div>
 
                 <nav>
-                    {links.map((l) => (
-                        <NavLink
-                            key={l.to}
-                            to={l.to}
-                            end={l.end}
-                            className="nav-link"
-                            title={collapsed ? l.label : undefined}
-                            aria-label={l.label}
-                            onClick={closeOnPhone}
-                        >
-                            <Icon name={l.icon} size={20} />
-                            {!collapsed && <span className="nav-label">{l.label}</span>}
-                        </NavLink>
-                    ))}
+                    {links.map((l) => {
+                        const count = l.to === '/people' ? requestCount : 0;
+                        return (
+                            <NavLink
+                                key={l.to}
+                                to={l.to}
+                                end={l.end}
+                                className="nav-link"
+                                title={collapsed ? l.label : undefined}
+                                aria-label={count > 0 ? `${l.label}, ${count} pending requests` : l.label}
+                                onClick={closeOnPhone}
+                            >
+                                <Icon name={l.icon} size={20} />
+                                {!collapsed && <span className="nav-label">{l.label}</span>}
+                                {count > 0 && (collapsed ? <span className="nav-dot" /> : <span className="nav-count">{count}</span>)}
+                            </NavLink>
+                        );
+                    })}
                 </nav>
 
                 <div className="sidebar-footer">

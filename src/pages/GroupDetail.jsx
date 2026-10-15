@@ -23,7 +23,12 @@ export default function GroupDetail() {
     const isMember = group.memberIds.includes(currentUser.id);
     const isOwner = group.ownerId === currentUser.id;
     const isInvited = !isMember && group.invitedIds.includes(currentUser.id);
-    const canSeeMembers = isMember || isInvited || !group.isPrivate;
+    const isMentor = currentUser.role === 'mentor';
+    // University-paid mentors can open every group, private or public, without joining.
+    const mentorAccess = isMentor && !isMember;
+    const canViewChat = isMember || isMentor;
+    const canSeeMembers = canViewChat || isInvited || !group.isPrivate;
+    const canJoin = !isMember && !isInvited && (!group.isPrivate || isMentor);
     const invitable = state.users.filter(
         (u) => u.major === group.major && !group.memberIds.includes(u.id) && !group.invitedIds.includes(u.id)
     );
@@ -57,6 +62,9 @@ export default function GroupDetail() {
                     </h1>
                     <p className="muted">{group.description}</p>
                     <p className="muted small">{group.major} · created by {userById(group.ownerId)?.name} · {timeAgo(group.createdAt)}</p>
+                    <p className="muted small">
+                        {group.isPrivate ? 'Invite only.' : 'Anyone can join.'} University-paid mentors can view all study groups.
+                    </p>
                 </div>
                 <div className="actions">
                     {isMember && !isOwner && (
@@ -65,19 +73,25 @@ export default function GroupDetail() {
                     {isInvited && (
                         <>
                             <button className="btn btn-primary" onClick={() => respondToInvite(group.id, true)}>Accept invitation</button>
-                            <button className="btn btn-ghost" onClick={() => { respondToInvite(group.id, false); navigate('/groups'); }}>Decline</button>
+                            <button className="btn btn-ghost" onClick={() => { respondToInvite(group.id, false); if (!isMentor) navigate('/groups'); }}>Decline</button>
                         </>
                     )}
-                    {!isMember && !isInvited && !group.isPrivate && (
+                    {canJoin && (
                         <button className="btn btn-primary" onClick={() => joinGroup(group.id)}>Join group</button>
                     )}
                 </div>
             </div>
 
+            {mentorAccess && (
+                <div className="notice">
+                    Mentor access: you are viewing this group as a university-paid mentor. You can read and reply in the chat without joining.
+                </div>
+            )}
+
             <div className="group-layout">
-                <div className={`card chat ${isMember ? '' : 'chat-locked'}`}>
+                <div className={`card chat ${canViewChat ? '' : 'chat-locked'}`}>
                     <h3>Group chat</h3>
-                    {!isMember ? (
+                    {!canViewChat ? (
                         <p className="muted">{lockedMessage}</p>
                     ) : (
                         <>
@@ -103,7 +117,7 @@ export default function GroupDetail() {
                             <form className="chat-input" onSubmit={send}>
                                 <NotSupportedButton icon="paperclip" label="Attach a file" />
                                 <NotSupportedButton icon="image" label="Attach a photo" />
-                                <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" />
+                                <input value={text} onChange={(e) => setText(e.target.value)} placeholder={mentorAccess ? 'Reply as a mentor…' : 'Type a message…'} />
                                 <button className="btn btn-primary" type="submit">Send</button>
                             </form>
                         </>
@@ -130,7 +144,7 @@ export default function GroupDetail() {
                             <h3>Invite classmates</h3>
                             <p className="muted small">
                                 Only people in {group.major} can be invited.
-                                {group.isPrivate && ' This group is private, so an invitation is the only way in.'}
+                                {group.isPrivate && ' This group is private, so students need an invitation to get in.'}
                             </p>
                             <form className="row gap" onSubmit={invite}>
                                 <select value={inviteId} onChange={(e) => setInviteId(e.target.value)} style={{ flex: 1, minWidth: 0 }}>

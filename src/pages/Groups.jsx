@@ -35,12 +35,13 @@ export default function Groups() {
         inviteIds: [],
     });
 
+    const isMentor = currentUser.role === 'mentor';
     const mine = state.groups.filter((g) => g.memberIds.includes(currentUser.id));
     const invites = state.groups.filter((g) => g.invitedIds.includes(currentUser.id) && !g.memberIds.includes(currentUser.id));
-    // Only public groups are discoverable. Private groups are invite-only.
-    const publicGroups = state.groups.filter(
+    // Students only see public groups here. University-paid mentors see every group.
+    const otherGroups = state.groups.filter(
         (g) =>
-            !g.isPrivate &&
+            (isMentor || !g.isPrivate) &&
             !g.memberIds.includes(currentUser.id) &&
             !g.invitedIds.includes(currentUser.id) &&
             (scope === 'all' || g.major === currentUser.major)
@@ -103,8 +104,9 @@ export default function Groups() {
                         </div>
                         <span className="muted small">
                             {form.isPrivate
-                                ? 'Invite only. The group is hidden from the public list and people can only join with an invitation.'
+                                ? 'Invite only. The group is hidden from the public list and students can only join with an invitation.'
                                 : 'Listed under public groups. Anyone who finds it can join without an invitation.'}
+                            {' '}University-paid mentors can view all study groups.
                         </span>
                     </div>
 
@@ -157,7 +159,10 @@ export default function Groups() {
             <section>
                 <h2>My groups</h2>
                 {mine.length === 0 ? (
-                    <EmptyState title="No groups yet" hint="Create one above or join a public group below." />
+                    <EmptyState
+                        title="No groups yet"
+                        hint={isMentor ? 'Create one above, or open any group below.' : 'Create one above or join a public group below.'}
+                    />
                 ) : (
                     <ul className="list">
                         {mine.map((g) => (
@@ -174,19 +179,32 @@ export default function Groups() {
 
             <section>
                 <div className="row between wrap gap">
-                    <h2>Public groups</h2>
+                    <h2>{isMentor ? 'All study groups' : 'Public groups'}</h2>
                     <ScopeToggle scope={scope} setScope={setScope} major={currentUser.major} />
                 </div>
-                {publicGroups.length === 0 ? (
-                    <EmptyState title="No public groups to join" hint="Private groups only appear here once you are invited." />
+                {isMentor && (
+                    <div className="notice">
+                        Mentor access: as a university-paid mentor you can open every study group, public or private, without an invitation.
+                    </div>
+                )}
+                {otherGroups.length === 0 ? (
+                    <EmptyState
+                        title={isMentor ? 'No other groups in this scope' : 'No public groups to join'}
+                        hint={isMentor ? 'Try University-wide.' : 'Private groups only appear here once you are invited.'}
+                    />
                 ) : (
                     <ul className="list">
-                        {publicGroups.map((g) => (
+                        {otherGroups.map((g) => (
                             <GroupRow
                                 key={g.id}
                                 g={g}
-                                meta={`${g.memberIds.length} members · ${g.major}`}
-                                action={<button className="btn btn-sm btn-primary" onClick={() => joinGroup(g.id)}>Join</button>}
+                                meta={`${g.memberIds.length} members · ${g.major}${isMentor ? ` · ${lastMessage(g)}` : ''}`}
+                                action={
+                                    <div className="row gap">
+                                        {isMentor && <Link to={`/groups/${g.id}`} className="btn btn-ghost btn-sm">Open</Link>}
+                                        <button className="btn btn-sm btn-primary" onClick={() => joinGroup(g.id)}>Join</button>
+                                    </div>
+                                }
                             />
                         ))}
                     </ul>
