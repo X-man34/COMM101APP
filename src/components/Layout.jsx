@@ -111,7 +111,6 @@ export default function Layout() {
                                     <div className="muted small">
                                         {currentUser.major} · {yearLabel(currentUser.year)}
                                     </div>
-                                    {currentUser.role === 'mentor' && <Badge tone="gold">Paid Mentor</Badge>}
                                 </div>
                             </Link>
                             <div className="sidebar-actions">

@@ -32,7 +32,6 @@ export default function Login() {
                     <BrandMark size={48} />
                     <div>
                         <div className="brand-name big">Bronco Bridge</div>
-                        <div className="muted">Boise State University · Study groups · Resources · Mentorship</div>
                     </div>
                 </div>
 
@@ -98,7 +97,6 @@ export default function Login() {
                             <textarea rows={2} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="What are you studying / interested in?" />
                         </label>
                         <button className="btn btn-primary" type="submit">Create account and sign in</button>
-                        <p className="muted small">Your account is stored only in this browser.</p>
                     </form>
                 )}
             </div>
