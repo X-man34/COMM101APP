@@ -38,7 +38,7 @@ export default function Forum() {
                 subtitle="Ask questions, get answers from upperclassmen and university-paid mentors in your major."
                 actions={
                     <>
-                        <Link to="/materials" className="btn btn-ghost">📚 Study materials</Link>
+                        <Link to="/materials" className="btn btn-ghost">Study materials</Link>
                         <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>{showForm ? 'Cancel' : '+ Ask a question'}</button>
                     </>
                 }
