@@ -147,7 +147,6 @@ export default function GroupDetail() {
                                     {group.invitedIds.map((uid) => (
                                         <div key={uid} className="list-row">
                                             <UserChip user={userById(uid)} showYear={false} />
-                                            <Badge>Pending</Badge>
                                         </div>
                                     ))}
                                 </>

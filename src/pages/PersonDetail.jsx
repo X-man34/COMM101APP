@@ -56,7 +56,6 @@ export default function PersonDetail() {
                         <p className="muted">{person.major} · {yearLabel(person.year)}</p>
                         <div className="row gap wrap" style={{ marginTop: 6 }}>
                             {person.role === 'mentor' && <Badge tone="gold">University-paid Mentor</Badge>}
-                            <Badge>{isUpperclassman(person) ? 'Upperclassman' : 'Underclassman'}</Badge>
                             {!isMe && connected && <Badge tone="green">Connected</Badge>}
                         </div>
                     </div>
